@@ -51,17 +51,17 @@ pipeline {
             }
         }
 
-        stage('Deploy') {
-            steps {
-                echo "Deploying application..."
-                sh """
-                docker stop my-app || true
-                docker rm my-app || true
-                docker run -d --name my-app -p 80:80 ${IMAGE_NAME}:${IMAGE_TAG}
-                """
-            }
-        }
+       stage('Deploy') {
+    steps {
+        echo "Deploying application..."
+        sh '''
+        docker stop my-app || true
+        docker rm my-app || true
+        docker run -d --name my-app -p 8080:80 achalgothe/my-app:latest
+        '''
     }
+}
+
 
     post {
         success {
