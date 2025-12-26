@@ -50,9 +50,18 @@ pipeline {
                 echo 'Deploying container...'
                 sh '''
                     docker rm -f my-app || true
-                    docker run -d -p 80:80 --name my-app $IMAGE_NAME:$TAG
+                    docker run -d --name my-app -p 8080:80 $IMAGE_NAME:$TAG
                 '''
             }
+        }
+    }
+
+    post {
+        success {
+            echo '✅ Deployment successful'
+        }
+        failure {
+            echo '❌ Deployment failed'
         }
     }
 }
