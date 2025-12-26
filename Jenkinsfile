@@ -8,34 +8,30 @@ pipeline {
 
     stages {
 
-        stage('Checkout Source Code') {
+        stage('Build') {
             steps {
-                echo '📥 Cloning GitHub repository...'
-                git url: 'https://github.com/StartBootstrap/startbootstrap-agency.git',
-                    branch: 'master'
+                echo '📦 Build stage (static frontend)'
+                sh 'ls -la'
             }
         }
 
-        stage('Verify Template') {
+        stage('Test') {
             steps {
-                echo '🔍 Verifying static frontend files...'
-                sh 'ls -la'
+                echo '🧪 Testing frontend files'
                 sh 'test -f index.html'
             }
         }
 
-        stage('Build Docker Image') {
+        stage('Docker Build') {
             steps {
-                echo '🐳 Building Docker image...'
-                sh '''
-                docker build -t $IMAGE_NAME:$IMAGE_TAG .
-                '''
+                echo '🐳 Building Docker image'
+                sh 'docker build -t $IMAGE_NAME:$IMAGE_TAG .'
             }
         }
 
-        stage('Push Docker Image') {
+        stage('Push Image') {
             steps {
-                echo '📤 Pushing image to DockerHub...'
+                echo '📤 Pushing image to DockerHub'
                 withCredentials([usernamePassword(
                     credentialsId: 'dockerhub-creds',
                     usernameVariable: 'DOCKER_USER',
@@ -49,9 +45,9 @@ pipeline {
             }
         }
 
-        stage('Deploy on EC2') {
+        stage('Deploy') {
             steps {
-                echo '🚀 Deploying container on EC2...'
+                echo '🚀 Deploying container on EC2'
                 sh '''
                 docker rm -f frontend || true
                 docker run -d -p 80:80 --name frontend $IMAGE_NAME:$IMAGE_TAG
@@ -62,10 +58,10 @@ pipeline {
 
     post {
         success {
-            echo '✅ CI/CD Pipeline completed successfully!'
+            echo '✅ All 5 stages completed successfully'
         }
         failure {
-            echo '❌ Pipeline failed. Check logs.'
+            echo '❌ Pipeline failed'
         }
     }
 }
