@@ -45,24 +45,23 @@ pipeline {
             }
         }
 
-        stage('Deploy') {
-    steps {
-        echo 'Deploying container...'
-        sh '''
-            docker rm -f my-app || true
-            docker run -d --name my-app -p 8081:80 achalgothe/my-app:latest
-        '''
-    }
-}
-
+         stage('Deploy') {
+            steps {
+                echo "🚀 Deploying on EC2"
+                sh '''
+                docker rm -f frontend || true
+                docker run -d -p 8081:80 --name frontend $IMAGE_NAME:latest
+                '''
+            }
+        }
     }
 
     post {
         success {
-            echo '✅ Deployment successful'
+            echo "✅ Pipeline completed successfully"
         }
         failure {
-            echo '❌ Deployment failed'
+            echo "❌ Pipeline failed"
         }
     }
 }
