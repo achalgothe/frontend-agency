@@ -46,14 +46,15 @@ pipeline {
         }
 
         stage('Deploy') {
-            steps {
-                echo 'Deploying container...'
-                sh '''
-                    docker rm -f my-app || true
-                    docker run -d --name my-app -p 8080:80 $IMAGE_NAME:$TAG
-                '''
-            }
-        }
+    steps {
+        echo 'Deploying container...'
+        sh '''
+            docker rm -f my-app || true
+            docker run -d --name my-app -p 8081:80 achalgothe/my-app:latest
+        '''
+    }
+}
+
     }
 
     post {
