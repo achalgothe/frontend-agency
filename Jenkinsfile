@@ -24,12 +24,14 @@ pipeline {
             }
         }
 
-        stage('Test') {
-            steps {
-                echo '🧪 Testing frontend files'
-                sh 'test -f index.html'
-            }
-        }
+        
+            stage('Test') {
+    steps {
+        echo '🧪 Testing frontend build output'
+        sh 'test -f dist/index.html'
+    }
+}
+
 
         stage('Docker Build') {
             steps {
@@ -54,16 +56,17 @@ pipeline {
             }
         }
 
-        stage('Deploy') {
-            steps {
-                echo '🚀 Deploying on EC2'
-                sh '''
-                docker rm -f frontend || true
-                docker run -d -p 80:80 --name frontend $IMAGE_NAME:$IMAGE_TAG
-                '''
-            }
-        }
+       stage('Deploy') {
+    steps {
+        echo "🚀 Deploying on EC2"
+        sh '''
+        docker rm -f frontend || true
+        docker run -d -p 8081:80 --name frontend achalgothe/frontend-agency:latest
+        '''
     }
+  }
+        
+}
 
     post {
         success {
