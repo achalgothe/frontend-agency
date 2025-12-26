@@ -2,77 +2,74 @@ pipeline {
     agent any
 
     environment {
-        IMAGE_NAME = "achalgothe/my-app"
-        IMAGE_TAG  = "latest"
-        DOCKERHUB_CREDENTIALS = "dockerhub-creds"
+        IMAGE_NAME = "achalgothe/frontend-agency"
     }
 
     stages {
 
         stage('Checkout') {
             steps {
-                echo "Checking out code..."
-                git url: 'https://github.com/achalgothe/my-docker-app.git', branch: 'main'
+                echo "📥 Checkout source code"
+                git branch: 'main',
+                    url: 'https://github.com/achalgothe/frontend-agency.git',
+                    credentialsId: 'github-creds'
             }
         }
 
         stage('Build') {
             steps {
-                echo "Building application..."
-                sh 'echo "Build completed"'   // yaha actual build command dal sakte ho
+                echo "📦 Build stage"
+                sh 'ls -la'
             }
         }
 
         stage('Test') {
             steps {
-                echo "Running tests..."
-                sh 'echo "Tests passed"'     // yaha pytest / npm test / mvn test
+                echo "🧪 Testing build output"
+                sh 'test -f dist/index.html'
             }
         }
 
-        stage('Docker Build & Push') {
+        stage('Docker Build') {
             steps {
-                script {
-                    echo "Building Docker image..."
-                    sh "docker build -t ${IMAGE_NAME}:${IMAGE_TAG} ."
+                echo "🐳 Building Docker image"
+                sh 'docker build -t $IMAGE_NAME:latest .'
+            }
+        }
 
-                    echo "Pushing image to DockerHub..."
-                    withCredentials([usernamePassword(
-                        credentialsId: DOCKERHUB_CREDENTIALS,
-                        usernameVariable: 'DOCKER_USER',
-                        passwordVariable: 'DOCKER_PASS'
-                    )]) {
-                        sh """
-                        echo \$DOCKER_PASS | docker login -u \$DOCKER_USER --password-stdin
-                        docker push ${IMAGE_NAME}:${IMAGE_TAG}
-                        """
-                    }
+        stage('Push Image') {
+            steps {
+                echo "📤 Pushing image to DockerHub"
+                withCredentials([usernamePassword(
+                    credentialsId: 'dockerhub-creds',
+                    usernameVariable: 'DOCKER_USER',
+                    passwordVariable: 'DOCKER_PASS'
+                )]) {
+                    sh '''
+                    echo $DOCKER_PASS | docker login -u $DOCKER_USER --password-stdin
+                    docker push $IMAGE_NAME:latest
+                    '''
                 }
             }
         }
 
-       stage('Deploy') {
-    steps {
-        echo "Deploying application..."
-        sh '''
-        docker stop my-app || true
-        docker rm my-app || true
-        docker run -d --name my-app -p 8080:80 achalgothe/my-app:latest
-        '''
+        stage('Deploy') {
+            steps {
+                echo "🚀 Deploying on EC2"
+                sh '''
+                docker rm -f frontend || true
+                docker run -d -p 8081:80 --name frontend $IMAGE_NAME:latest
+                '''
+            }
+        }
     }
-}
-
 
     post {
         success {
-            echo "✅ Pipeline completed successfully!"
+            echo "✅ Pipeline completed successfully"
         }
         failure {
-            echo "❌ Pipeline failed. Check logs."
-        }
-        always {
-            echo "🧹 Cleaning workspace..."
-            cleanWs()
+            echo "❌ Pipeline failed"
         }
     }
 }
