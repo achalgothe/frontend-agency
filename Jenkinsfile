@@ -8,9 +8,18 @@ pipeline {
 
     stages {
 
+        stage('Checkout') {
+            steps {
+                echo '📥 Checkout source code'
+                git url: 'https://github.com/achalgothe/frontend-agency.git',
+                    branch: 'main',
+                    credentialsId: 'github-creds'
+            }
+        }
+
         stage('Build') {
             steps {
-                echo '📦 Build stage (static frontend)'
+                echo '📦 Build stage (static template)'
                 sh 'ls -la'
             }
         }
@@ -47,7 +56,7 @@ pipeline {
 
         stage('Deploy') {
             steps {
-                echo '🚀 Deploying container on EC2'
+                echo '🚀 Deploying on EC2'
                 sh '''
                 docker rm -f frontend || true
                 docker run -d -p 80:80 --name frontend $IMAGE_NAME:$IMAGE_TAG
@@ -58,7 +67,7 @@ pipeline {
 
     post {
         success {
-            echo '✅ All 5 stages completed successfully'
+            echo '✅ Pipeline completed successfully'
         }
         failure {
             echo '❌ Pipeline failed'
