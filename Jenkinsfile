@@ -1,5 +1,9 @@
 pipeline {
     agent any
+    
+    triggers {
+    pollSCM('* * * * *')
+}
 
     environment {
         IMAGE_NAME = "achalgothe/frontend-agency"
