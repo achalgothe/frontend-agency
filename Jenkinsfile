@@ -5,22 +5,21 @@ pipeline {
         sonarScanner 'sonar-scanner'
     }
 
-    stages {
-
-        stage('SonarQube Analysis') {
-            steps {
-                echo "🔍 Running SonarQube analysis"
-                withSonarQubeEnv('sonarqube') {
-                    sh '''
-                      sonar-scanner \
-                      -Dsonar.projectKey=frontend-agency \
-                      -Dsonar.projectName=frontend-agency \
-                      -Dsonar.sources=src
-                    '''
-                }
-            }
+    stage('SonarQube Analysis') {
+    steps {
+        echo "🔍 Running SonarQube analysis"
+        withSonarQubeEnv('sonarqube') {
+            sh '''
+              export PATH=$PATH:/var/lib/jenkins/tools/hudson.plugins.sonar.SonarRunnerInstallation/sonar-scanner/bin
+              sonar-scanner \
+                -Dsonar.projectKey=frontend-agency \
+                -Dsonar.projectName=frontend-agency \
+                -Dsonar.sources=src
+            '''
         }
     }
+}
+
 
     post {
         failure {
