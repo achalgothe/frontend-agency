@@ -2,37 +2,10 @@ pipeline {
     agent any
 
     tools {
-        sonarQube 'sonar-scanner'
-    }
-
-    environment {
-        IMAGE_NAME = "achalgothe/frontend-agency"
+        sonarScanner 'sonar-scanner'
     }
 
     stages {
-
-        stage('Checkout') {
-            steps {
-                echo "📥 Checkout source code"
-                git branch: 'main',
-                    url: 'https://github.com/achalgothe/frontend-agency.git',
-                    credentialsId: 'github-creds'
-            }
-        }
-
-        stage('Build') {
-            steps {
-                echo "📦 Build stage"
-                sh 'ls -la'
-            }
-        }
-
-        stage('Test') {
-            steps {
-                echo "🧪 Testing build output"
-                sh 'test -f dist/index.html'
-            }
-        }
 
         stage('SonarQube Analysis') {
             steps {
@@ -45,12 +18,6 @@ pipeline {
                       -Dsonar.sources=src
                     '''
                 }
-            }
-        }
-
-        stage('Docker Build') {
-            steps {
-                sh 'docker build -t $IMAGE_NAME .'
             }
         }
     }
