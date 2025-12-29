@@ -32,13 +32,18 @@ pipeline {
 
         // 🔹 SONARQUBE STAGE (YAHI ADD KARNA THA)
         stage('SonarQube Analysis') {
-            steps {
-                echo "🔍 Running SonarQube analysis"
-                withSonarQubeEnv('sonarqube') {
-                    sh 'mvn sonar:sonar'
-                }
-            }
+    steps {
+        echo "🔍 Running SonarQube analysis"
+        withSonarQubeEnv('sonarqube') {
+            sh '''
+            sonar-scanner \
+            -Dsonar.projectKey=frontend-agency \
+            -Dsonar.projectName=frontend-agency \
+            -Dsonar.sources=.
+            '''
         }
+    }
+}
 
         stage('Docker Build') {
             steps {
