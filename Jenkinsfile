@@ -1,15 +1,20 @@
 pipeline {
     agent any
-    
-    triggers {
-    pollSCM('* * * * *')
-}
 
     environment {
         IMAGE_NAME = "achalgothe/frontend-agency"
     }
 
     stages {
+
+        stage('Checkout') {
+            steps {
+                echo "📥 Checkout source code"
+                git branch: 'main',
+                    url: 'https://github.com/achalgothe/frontend-agency.git',
+                    credentialsId: 'github-creds'
+            }
+        }
 
         stage('Build') {
             steps {
@@ -22,6 +27,16 @@ pipeline {
             steps {
                 echo "🧪 Testing build output"
                 sh 'test -f dist/index.html'
+            }
+        }
+
+        // 🔹 SONARQUBE STAGE (YAHI ADD KARNA THA)
+        stage('SonarQube Analysis') {
+            steps {
+                echo "🔍 Running SonarQube analysis"
+                withSonarQubeEnv('sonarqube') {
+                    sh 'mvn sonar:sonar'
+                }
             }
         }
 
