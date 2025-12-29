@@ -36,14 +36,15 @@ pipeline {
         echo "🔍 Running SonarQube analysis"
         withSonarQubeEnv('sonarqube') {
             sh '''
-            sonar-scanner \
-            -Dsonar.projectKey=frontend-agency \
-            -Dsonar.projectName=frontend-agency \
-            -Dsonar.sources=.
+              sonar-scanner \
+              -Dsonar.projectKey=frontend-agency \
+              -Dsonar.projectName=frontend-agency \
+              -Dsonar.sources=src
             '''
         }
     }
 }
+
 
         stage('Docker Build') {
             steps {
