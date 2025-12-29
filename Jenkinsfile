@@ -30,22 +30,23 @@ pipeline {
             }
         }
 
-        stage('SonarQube Analysis') {
-            steps {
-                echo "🔍 Running SonarQube analysis"
-                withSonarQubeEnv('sonarqube') {
-                    sh '''
-                      echo "Using SonarScanner from: $SONAR_SCANNER_HOME"
-                      export PATH=$PATH:$SONAR_SCANNER_HOME/bin
-
-                      sonar-scanner \
-                        -Dsonar.projectKey=frontend-agency \
-                        -Dsonar.projectName=frontend-agency \
-                        -Dsonar.sources=src
-                    '''
-                }
+       stage('SonarQube Analysis') {
+    steps {
+        echo "🔍 Running SonarQube analysis"
+        withSonarQubeEnv('sonarqube') {
+            withCredentials([string(credentialsId: 'sonar-token', variable: 'SONAR_TOKEN')]) {
+                sh '''
+                sonar-scanner \
+                -Dsonar.projectKey=frontend-agency \
+                -Dsonar.projectName=frontend-agency \
+                -Dsonar.sources=src \
+                -Dsonar.login=$SONAR_TOKEN
+                '''
             }
         }
+    }
+}
+
 
         stage('Docker Build') {
             steps {
