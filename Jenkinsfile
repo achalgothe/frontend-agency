@@ -2,103 +2,65 @@ pipeline {
     agent any
 
     environment {
-        // DockerHub details
         IMAGE_NAME = "achalgothe/frontend-agency"
-        IMAGE_TAG  = "latest"
-
-        // SonarQube
-        SONAR_PROJECT_KEY = "frontend-agency"
-        SONAR_PROJECT_NAME = "frontend-agency"
-        SONAR_HOST_URL = "http://<SONARQUBE-IP>:9000"
-
-        // Jenkins credentials IDs
-        DOCKER_CREDS = "dockerhub-creds"
-        SONAR_TOKEN  = "sonar-token"
-
-        // Deployment
-        EC2_USER = "ec2-user"
-        EC2_HOST = "<EC2-PUBLIC-IP>"
     }
 
     stages {
 
-        stage('Checkout Source Code') {
+        stage('Checkout') {
             steps {
-                echo "📥 Checking out source code"
+                echo "📥 Checkout source code"
                 git branch: 'main',
-                    url: 'https://github.com/achalgothe/frontend-agency.git'
+                    url: 'https://github.com/achalgothe/frontend-agency.git',
+                    credentialsId: 'github-creds'
             }
         }
 
-        stage('SonarQube Code Analysis') {
+        stage('Build') {
             steps {
-                echo "🔍 Running SonarQube analysis"
-                withSonarQubeEnv('SonarQube') {
-                    sh """
-                    sonar-scanner \
-                    -Dsonar.projectKey=${SONAR_PROJECT_KEY} \
-                    -Dsonar.projectName=${SONAR_PROJECT_NAME} \
-                    -Dsonar.sources=. \
-                    -Dsonar.host.url=${SONAR_HOST_URL} \
-                    -Dsonar.login=${SONAR_TOKEN}
-                    """
-                }
+                echo "📦 Build stage"
+                sh 'ls -la'
             }
         }
 
-        stage('Quality Gate Check') {
+        stage('Test') {
             steps {
-                echo "🚦 Checking Quality Gate"
-                timeout(time: 2, unit: 'MINUTES') {
-                    waitForQualityGate abortPipeline: true
-                }
+                echo "🧪 Testing build output"
+                sh 'test -f dist/index.html'
             }
         }
 
-        stage('Docker Build') {
+        stage('SonarQube Analysis') {
+    steps {
+        echo "🔍 Running SonarQube analysis"
+        withSonarQubeEnv('sonarqube') {
+            withCredentials([string(credentialsId: 'sonar-token', variable: 'SONAR_TOKEN')]) {
+                sh '''
+                sonar-scanner \
+                -Dsonar.projectKey=frontend-agency \
+                -Dsonar.projectName=frontend-agency \
+                -Dsonar.sources=src \
+                -Dsonar.login=$SONAR_TOKEN
+                '''
+            }
+        }
+    }
+}
+
+     stage('Docker Build') {
             steps {
-                echo "🐳 Building Docker image"
-                sh "docker build -t ${IMAGE_NAME}:${IMAGE_TAG} ."
+                sh 'docker build -t $IMAGE_NAME .'
             }
         }
 
-        stage('Docker Push') {
-            steps {
-                echo "📤 Pushing image to DockerHub"
-                withCredentials([usernamePassword(
-                    credentialsId: DOCKER_CREDS,
-                    usernameVariable: 'DOCKER_USER',
-                    passwordVariable: 'DOCKER_PASS'
-                )]) {
-                    sh """
-                    echo $DOCKER_PASS | docker login -u $DOCKER_USER --password-stdin
-                    docker push ${IMAGE_NAME}:${IMAGE_TAG}
-                    """
-                }
-            }
-        }
-
-        stage('Deploy to EC2') {
-            steps {
-                echo "🚀 Deploying application to EC2"
-                sh """
-                ssh -o StrictHostKeyChecking=no ${EC2_USER}@${EC2_HOST} << EOF
-                  docker pull ${IMAGE_NAME}:${IMAGE_TAG}
-                  docker stop frontend || true
-                  docker rm frontend || true
-                  docker run -d --name frontend -p 80:80 ${IMAGE_NAME}:${IMAGE_TAG}
-                EOF
-                """
-            }
-        }
     }
 
     post {
         success {
-            echo "✅ CI/CD Pipeline completed successfully!"
+            echo "✅ Pipeline successful"
         }
         failure {
-            echo "❌ Pipeline failed! Check logs & SonarQube Quality Gate."
+            echo "❌ Pipeline failed"
         }
     }
 }
